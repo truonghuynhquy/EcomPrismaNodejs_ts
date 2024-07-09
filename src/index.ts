@@ -1,9 +1,9 @@
 import express, { Express, Request, Response } from "express";
+import { PORT } from "./secrets";
+import rootRouter from "./routes";
 
 const app: Express = express();
 
-app.get("/", (req: Request, res: Response) => {
-  res.send("Welcome to the API!");
-});
+app.use("/api", rootRouter);
 
-app.listen(3000, () => console.log("App working!"));
+app.listen(PORT, () => console.log("App working!"));
