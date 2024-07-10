@@ -11,44 +11,30 @@ import { create } from "domain";
 import { UnprocessableEntity } from "../exceptions/validation";
 import { SignUpSchema } from "../schema/users";
 
-export const signup = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const { email, password, name } = req.body;
-    SignUpSchema.parse(req.body);
+export const signup = async (req: Request, res: Response, next: NextFunction) => {
+  const { email, password, name } = req.body;
+  SignUpSchema.parse(req.body);
 
-    let user = await prismaClient.user.findFirst({ where: { email } });
+  let user = await prismaClient.user.findFirst({ where: { email } });
 
-    if (user) {
-      return next(
-        new BadRequestsException(
-          "User already exists",
-          ErrorCode.USER_ALREADY_EXIST
-        )
-      );
-    }
-
-    user = await prismaClient.user.create({
-      data: {
-        name,
-        email,
-        password: hashSync(password, 10),
-      },
-    });
-
-    res.json(user);
-  } catch (error: any) {
-    next(
-      new UnprocessableEntity(
-        error?.issues,
-        "Unprocessable entity",
-        ErrorCode.UNPROCESSABLE_ENTITY
+  if (user) {
+    return next(
+      new BadRequestsException(
+        "User already exists",
+        ErrorCode.USER_ALREADY_EXIST
       )
     );
   }
+
+  user = await prismaClient.user.create({
+    data: {
+      name,
+      email,
+      password: hashSync(password, 10),
+    },
+  });
+
+  res.json(user);
 };
 
 export const login = async (
