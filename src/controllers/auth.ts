@@ -1,28 +1,27 @@
-import { json, NextFunction, Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { prismaClient } from "..";
 import { hashSync, compareSync } from "bcrypt";
 import * as jwt from "jsonwebtoken";
 import { JWT_SECRET } from "../secrets";
 import { BadRequestsException } from "../exceptions/bad-requests";
 import { ErrorCode } from "../exceptions/root";
-import { nextTick } from "process";
-import { error, log } from "console";
-import { create } from "domain";
-import { UnprocessableEntity } from "../exceptions/validation";
 import { SignUpSchema } from "../schema/users";
+import { NotFoundException } from "../exceptions/not-found";
 
-export const signup = async (req: Request, res: Response, next: NextFunction) => {
+export const signup = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   const { email, password, name } = req.body;
   SignUpSchema.parse(req.body);
 
   let user = await prismaClient.user.findFirst({ where: { email } });
 
   if (user) {
-    return next(
-      new BadRequestsException(
-        "User already exists",
-        ErrorCode.USER_ALREADY_EXIST
-      )
+    new BadRequestsException(
+      "User already exists",
+      ErrorCode.USER_ALREADY_EXIST
     );
   }
 
@@ -46,17 +45,13 @@ export const login = async (
 
   let user = await prismaClient.user.findFirst({ where: { email } });
   if (!user) {
-    return next(
-      new BadRequestsException("User does not exists", ErrorCode.USER_NOT_FOUND)
-    );
+    throw new NotFoundException("User not found", ErrorCode.USER_NOT_FOUND);
   }
 
   if (!compareSync(password, user.password)) {
-    return next(
-      new BadRequestsException(
-        "Passwords do not match",
-        ErrorCode.INCORRECT_PASSWORD
-      )
+    throw new BadRequestsException(
+      "Incorrect password",
+      ErrorCode.INCORRECT_PASSWORD
     );
   }
 
