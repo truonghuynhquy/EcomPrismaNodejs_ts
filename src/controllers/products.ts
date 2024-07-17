@@ -1,9 +1,7 @@
 import { ErrorCode } from "./../exceptions/root";
-import { json, Request, Response } from "express";
+import { Request, Response } from "express";
 import { prismaClient } from "..";
 import { NotFoundException } from "../exceptions/not-found";
-import { create } from "domain";
-import { join } from "path";
 
 export const createProduct = async (req: Request, res: Response) => {
   // ["tea, "india"] => "tea, india"
@@ -40,7 +38,7 @@ export const updateProduct = async (req: Request, res: Response) => {
   }
 };
 export const deleteProduct = async (req: Request, res: Response) => {
-  const deleteProduct = await prismaClient.product.delete({
+  await prismaClient.product.delete({
     where: {
       id: +req.params.id,
     },
@@ -51,5 +49,24 @@ export const deleteProduct = async (req: Request, res: Response) => {
     message: "Delete product successfully",
   });
 };
-export const listProducts = async (req: Request, res: Response) => {};
+export const listProducts = async (req: Request, res: Response) => {
+  // {
+  //   count: 100,
+  //   data: []
+  // }
+  const count = await prismaClient.product.count();
+
+  const skip: number = req.query.skip ? +req.query.skip : 0;
+  const take: number = skip ? 5 : count;
+
+  const products = await prismaClient.product.findMany({
+    skip: skip,
+    take: take,
+  });
+
+  res.json({
+    count,
+    data: products,
+  });
+};
 export const getProductById = async (req: Request, res: Response) => {};
