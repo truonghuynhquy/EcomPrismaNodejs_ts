@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
 import { AddressSchema } from "../schema/users";
-import { User } from "@prisma/client";
 import { NotFoundException } from "../exceptions/not-found";
 import { ErrorCode } from "../exceptions/root";
 import { prismaClient } from "..";
@@ -17,5 +16,29 @@ export const addAddress = async (req: Request, res: Response) => {
 
   res.json(address);
 };
-export const deleteAddress = async (req: Request, res: Response) => {};
-export const listAddress = async (req: Request, res: Response) => {};
+export const deleteAddress = async (req: Request, res: Response) => {
+  try {
+    await prismaClient.address.delete({
+      where: {
+        id: +req.params.id,
+      },
+    });
+    res.json({
+      success: true,
+      message: "Delete Address Successfully",
+    });
+  } catch (error) {
+    throw new NotFoundException(
+      "Address not found.",
+      ErrorCode.ADDRESS_NOT_FOUND
+    );
+  }
+};
+export const listAddress = async (req: Request, res: Response) => {
+  const addresses = await prismaClient.address.findMany({
+    where: {
+      userId: req.user?.id,
+    },
+  });
+  res.json(addresses);
+};
