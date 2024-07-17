@@ -14,3 +14,8 @@ export const createProduct = async (req: Request, res: Response) => {
 
   res.json(product);
 };
+
+export const updateProduct = async (req: Request, res: Response) => {};
+export const deleteProduct = async (req: Request, res: Response) => {};
+export const listProducts = async (req: Request, res: Response) => {};
+export const getProductById = async (req: Request, res: Response) => {};
