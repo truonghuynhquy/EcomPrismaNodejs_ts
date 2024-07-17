@@ -1,7 +1,9 @@
 import { ErrorCode } from "./../exceptions/root";
-import { Request, Response } from "express";
+import { json, Request, Response } from "express";
 import { prismaClient } from "..";
 import { NotFoundException } from "../exceptions/not-found";
+import { create } from "domain";
+import { join } from "path";
 
 export const createProduct = async (req: Request, res: Response) => {
   // ["tea, "india"] => "tea, india"
@@ -37,6 +39,17 @@ export const updateProduct = async (req: Request, res: Response) => {
     );
   }
 };
-export const deleteProduct = async (req: Request, res: Response) => {};
+export const deleteProduct = async (req: Request, res: Response) => {
+  const deleteProduct = await prismaClient.product.delete({
+    where: {
+      id: +req.params.id,
+    },
+  });
+
+  res.json({
+    success: true,
+    message: "Delete product successfully",
+  });
+};
 export const listProducts = async (req: Request, res: Response) => {};
 export const getProductById = async (req: Request, res: Response) => {};
