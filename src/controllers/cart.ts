@@ -1,22 +1,15 @@
-import { json, Request, Response } from "express";
-import { CreateCartSchema } from "../schema/cart";
+import { Request, Response } from "express";
+import { ChangeQuantitySchema, CreateCartSchema } from "../schema/cart";
 import { Product } from "@prisma/client";
 import { NotFoundException } from "../exceptions/not-found";
 import { ErrorCode } from "../exceptions/root";
 import { prismaClient } from "..";
 import { UnauthorizedException } from "../exceptions/unauthorized";
-import { create } from "domain";
-import { parse } from "path";
 import { BadRequestsException } from "../exceptions/bad-requests";
-import { InternalException } from "../exceptions/internal-exception";
 
 export const addItemToCart = async (req: Request, res: Response) => {
   // Validate that the user is adding his or her own cart items
-  const userId = req.user?.id; // Let's say you have user authentication middleware
-  if (!userId) {
-    throw new UnauthorizedException("Unauthorized", ErrorCode.UNAUTHORIZED);
-  }
-
+  const userId = req.user?.id;
   // Validate input data
   const validatedData = CreateCartSchema.parse(req.body);
 
@@ -69,11 +62,7 @@ export const addItemToCart = async (req: Request, res: Response) => {
 
 export const deleteItemFromCart = async (req: Request, res: Response) => {
   // Check if user is deleting its own cart item
-  const userId = req.user?.id; // Let's say you have user authentication middleware
-  if (!userId) {
-    throw new UnauthorizedException("Unauthorized", ErrorCode.UNAUTHORIZED);
-  }
-
+  const userId = req.user?.id;
   const cartItem = await prismaClient.cartItem.findUnique({
     where: {
       id: +req.params.id,
@@ -104,6 +93,48 @@ export const deleteItemFromCart = async (req: Request, res: Response) => {
   });
 };
 
-export const changeQuantity = async (req: Request, res: Response) => {};
+export const changeQuantity = async (req: Request, res: Response) => {
+  // Check if user is updating its own cart item
+  const cartItem = await prismaClient.cartItem.findUnique({
+    where: {
+      id: +req.params.id,
+    },
+  });
 
-export const getCart = async (req: Request, res: Response) => {};
+  if (!cartItem) {
+    throw new NotFoundException(
+      "Cart Item not found!",
+      ErrorCode.CART_ITEM_NOT_FOUND
+    );
+  }
+
+  if (cartItem.userId !== req.user?.id) {
+    throw new BadRequestsException(
+      "Forbidden: You can only delete your own cart items",
+      ErrorCode.CART_ITEM_DOES_NOT_BELONG
+    );
+  }
+
+  const validatedData = ChangeQuantitySchema.parse(req.body);
+  const updatedCart = await prismaClient.cartItem.update({
+    where: {
+      id: +req.params.id,
+    },
+    data: {
+      quantity: validatedData.quantity,
+    },
+  });
+  res.json(updatedCart);
+};
+
+export const getCart = async (req: Request, res: Response) => {
+  const cart = await prismaClient.cartItem.findMany({
+    where: {
+      userId: req.user?.id,
+    },
+    include: {
+      product: true,
+    },
+  });
+  res.json(cart);
+};
