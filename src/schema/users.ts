@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { nullable, object, string, z } from "zod";
 
 export const SignUpSchema = z.object({
   name: z.string(),
@@ -12,4 +12,10 @@ export const AddressSchema = z.object({
   pincode: z.string().length(6),
   country: z.string(),
   city: z.string(),
+});
+
+export const UpdateUserSchema = z.object({
+  name: z.string().optional(),
+  defaultShippingAddress: z.number().optional(),
+  defaultBillingAddress: z.number().optional(),
 });
