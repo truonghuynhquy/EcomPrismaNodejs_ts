@@ -1,3 +1,4 @@
+import { Product } from "@prisma/client";
 import { Router } from "express";
 import { errorHandler } from "../error-handler";
 import {
@@ -5,6 +6,7 @@ import {
   deleteProduct,
   getProductById,
   listProducts,
+  searchProduct,
   updateProduct,
 } from "../controllers/products";
 import authMiddleware from "../middlewares/auth";
@@ -31,6 +33,11 @@ productsRoutes.get(
   "/",
   [authMiddleware, adminMiddleware],
   errorHandler(listProducts)
+);
+productsRoutes.get(
+  "/search",
+  [authMiddleware, adminMiddleware],
+  errorHandler(searchProduct)
 );
 productsRoutes.get(
   "/:id",
